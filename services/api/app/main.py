@@ -1,9 +1,11 @@
+import logging
 import os
 
 import psycopg
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+logger = logging.getLogger("secureshop.api")
 app = FastAPI(title="SecureShop API", version="0.1.0")
 
 
@@ -35,7 +37,8 @@ def list_products():
             rows = conn.execute(
                 "SELECT id, name, price_inr FROM shop.products ORDER BY id"
             ).fetchall()
-    except psycopg.OperationalError:
+    except psycopg.OperationalError as exc:
+        logger.warning("database unavailable: %s", exc)
         raise HTTPException(status_code=503, detail="database unavailable")
     return [{"id": r[0], "name": r[1], "price_inr": float(r[2])} for r in rows]
 
@@ -48,6 +51,7 @@ def add_product(product: ProductIn):
                 "INSERT INTO shop.products (name, price_inr) VALUES (%s, %s) RETURNING id",
                 (product.name, product.price_inr),
             ).fetchone()
-    except psycopg.OperationalError:
+    except psycopg.OperationalError as exc:
+        logger.warning("database unavailable: %s", exc)
         raise HTTPException(status_code=503, detail="database unavailable")
     return {"id": row[0], **product.model_dump()}
