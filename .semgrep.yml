@@ -1,0 +1,15 @@
+rules:
+  - id: secureshop-no-string-built-sql
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SQL built from strings can be injected. Pass values as parameters
+      (%s placeholders plus a tuple) instead.
+    metadata:
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+    pattern-either:
+      - pattern: $CONN.execute(f"...", ...)
+      - pattern: $CONN.execute("..." % $X, ...)
+      - pattern: $CONN.execute("..." + $X, ...)
+      - pattern: $CONN.execute("...".format(...), ...)

@@ -1,0 +1,5 @@
+# pcre2 CVE-2026-103111 in nginx-unprivileged:stable-alpine (base image).
+# Not reachable: exploitation needs an attacker-controlled regex; our nginx config uses
+# no regex locations and accepts no user-supplied patterns.
+# Fixed upstream in pcre2 10.49-r0; remove once the base image digest is refreshed.
+CVE-2026-103111 exp:2026-10-17
