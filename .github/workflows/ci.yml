@@ -65,6 +65,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -103,3 +105,40 @@ jobs:
       - name: Push scanned image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: docker push "$IMAGE:${{ github.sha }}"
+
+      - name: Get pushed digest
+        id: digest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          ref=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:${{ github.sha }}")
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "digest=${ref#*@}" >> "$GITHUB_OUTPUT"
+
+      - name: Install Cosign
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (keyless)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cosign sign --yes "${{ steps.digest.outputs.ref }}"
+
+      - name: Generate SBOM
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.digest.outputs.ref }}
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          upload-artifact: false
+
+      - name: Attest SBOM (signed)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cosign attest --yes --type cyclonedx --predicate sbom.cdx.json "${{ steps.digest.outputs.ref }}"
+
+      - name: Build provenance (SLSA)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.digest.outputs.digest }}
+          push-to-registry: true
