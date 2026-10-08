@@ -142,3 +142,48 @@ jobs:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.digest.outputs.digest }}
           push-to-registry: false
+
+  promote:
+    name: promote
+    needs: [build-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@f713795cb21599bc4e5c4b58cbad1da852d7eeb9 # v3
+
+      - name: Resolve digests and verify signatures
+        id: d
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          for svc in api web; do
+            img="ghcr.io/$OWNER/secureshop-$svc"
+            digest=$(docker buildx imagetools inspect "$img:${{ github.sha }}" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            if [ -z "$digest" ]; then echo "no digest for $svc"; exit 1; fi
+            cosign verify "$img@$digest" \
+              --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@refs/heads/main" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+            echo "verified $img@$digest"
+            echo "$svc=$img@$digest" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Check out gitops repo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ github.repository_owner }}/secureshop-gitops
+          ssh-key: ${{ secrets.GITOPS_DEPLOY_KEY }}
+          path: gitops
+
+      - name: Pin new digests in the dev overlay
+        working-directory: gitops/overlays/dev
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          kustomize edit set image "ghcr.io/$OWNER/secureshop-api=${{ steps.d.outputs.api }}"
+          kustomize edit set image "ghcr.io/$OWNER/secureshop-web=${{ steps.d.outputs.web }}"
+          git config user.name "secureshop-ci"
+          git config user.email "secureshop-ci@users.noreply.github.com"
+          if git diff --quiet; then echo "no change"; exit 0; fi
+          git commit -am "promote: secureshop ${{ github.sha }} (signed digests)"
+          git push
