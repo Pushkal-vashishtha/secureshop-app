@@ -1,5 +1,6 @@
-# pcre2 CVE-2026-103111 in nginx-unprivileged:stable-alpine (base image).
 # Not reachable: exploitation needs an attacker-controlled regex; our nginx config uses
 # no regex locations and accepts no user-supplied patterns.
-# Fixed upstream in pcre2 10.49-r0; remove once the base image digest is refreshed.
-CVE-2026-103111 exp:2026-10-17
+# libtiff CVE-2026-4775 in nginx-unprivileged:stable-alpine (base image, digest 15c994d1).
+# Not reachable: libtiff is only used by nginx's image-filter module, which our config never loads,
+# and the site never serves or processes TIFF images. Fixed in Alpine tiff 4.7.2-r0; remove when the base image includes it.
+CVE-2026-4775 exp:2026-10-24
