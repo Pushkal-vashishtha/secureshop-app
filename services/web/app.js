@@ -4,7 +4,7 @@ fetch("/api/products")
     const list = document.getElementById("products");
     list.replaceChildren(...items.map((p) => {
       const li = document.createElement("li");
-      li.textContent = `${p.name}: ?${p.price_inr}`;
+      li.textContent = `${p.name}: \u20B9${p.price_inr}`;
       return li;
     }));
   })
