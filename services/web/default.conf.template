@@ -1,6 +1,7 @@
 server {
     listen 8080;
     server_tokens off;
+    charset utf-8;
     root /usr/share/nginx/html;
 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
