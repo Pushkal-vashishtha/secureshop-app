@@ -17,7 +17,7 @@ jobs:
     name: secrets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Gitleaks (full history)
@@ -34,7 +34,7 @@ jobs:
     container:
       image: semgrep/semgrep:latest@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Semgrep (community + custom rules)
         run: >
           semgrep scan --error
@@ -51,7 +51,7 @@ jobs:
     name: sca
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Trivy (dependencies, secrets, Dockerfiles)
         run: |
           docker run --rm -v "$PWD:/src" -w /src aquasec/trivy:latest@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa \
@@ -72,7 +72,7 @@ jobs:
       matrix:
         service: [api, web]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set image name (GHCR needs lowercase)
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/secureshop-${{ matrix.service }}" >> "$GITHUB_ENV"
@@ -170,7 +170,7 @@ jobs:
           done
 
       - name: Check out gitops repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ github.repository_owner }}/secureshop-gitops
           ssh-key: ${{ secrets.GITOPS_DEPLOY_KEY }}
