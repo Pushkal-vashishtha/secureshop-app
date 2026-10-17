@@ -1,11 +1,11 @@
-FROM cgr.dev/chainguard/python:latest-dev@sha256:47b1a23ae387fc1d5264abd79c395827fcca7ef92afe086908b51ce0747e8e77 AS build
+FROM cgr.dev/chainguard/python:latest-dev@sha256:678b051d9daf61ab6c1eaad7f7eb7426e612a99b655b715a639a6f898318a6e7 AS build
 WORKDIR /app
 RUN python -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir --require-hashes --only-binary :all: -r requirements.txt && pip uninstall -y pip
 
-FROM cgr.dev/chainguard/python:latest@sha256:c26e4957fef58d936401b8e2bb9ccb6db0f404f51597a0d2c7586e1d0112df0a
+FROM cgr.dev/chainguard/python:latest@sha256:d0a0ef8759e4da134c9848b9bba9aa9b7fec345427f093f1a37ca02434e685d8
 WORKDIR /app
 ENV PATH="/app/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
